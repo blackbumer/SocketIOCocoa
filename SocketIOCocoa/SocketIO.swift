@@ -87,7 +87,7 @@ func deconstructData(data: AnyObject, inout buffers: [NSData]) -> AnyObject{
                 returnDict.setObject(deconstructData(value, &buffers), forKey: strkey)
             }
             else{
-                NSLog("Dict has a non string key")
+                log.verbose("Dict has a non string key")
             }
         }
         
@@ -133,7 +133,7 @@ func reconstructData(data: AnyObject, buffers: [NSData]) -> AnyObject {
                     returnDict.setObject(reconstructData(value, buffers), forKey: strkey)
                 }
                 else{
-                    NSLog("Dict has a non string key")
+                    log.verbose("Dict has a non string key")
                 }
             }
             
@@ -455,12 +455,12 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
     }
     
     public func open(){
-        NSLog("[SocketIOClient] ready state: \(self.readyState.description)")
+        log.verbose("[SocketIOClient] ready state: \(self.readyState.description)")
         if self.readyState == .Open || self.readyState == .Opening {
             return
         }
         
-        NSLog("[SocketIOClient] Opening")
+        log.verbose("[SocketIOClient] Opening")
         
         self.engineSocket = EngineSocket(host: self.host, port: self.port, path: self.path, secure: self.secure, query: self.query, transports: self.transports, upgrade: self.upgrade, config: [:])
         
@@ -471,11 +471,11 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
         self.engineSocket!.open()
         
         if self.timeout != 0 {
-            NSLog("connect attempt will timeout after \(self.timeout) seconds")
+            log.verbose("connect attempt will timeout after \(self.timeout) seconds")
             
             self.delay(Double(self.timeout)){
                 if self.readyState != .Open {
-                    NSLog("[SocketIOClient] connect timeout")
+                    log.verbose("[SocketIOClient] connect timeout")
                     self.engineSocket?.delegate = nil
                     self.engineSocket?.close()
                     
@@ -493,13 +493,13 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
         self.attempts++
         
         if self.reconnectAttempts != 0 && self.attempts > self.reconnectAttempts {
-            NSLog("reconnect failed")
+            log.verbose("reconnect failed")
             self.delegate?.clientReconnectionFailed(self)
             self.reconnecting = false
         }
         else{
             let delay = min(self.attempts * self.reconnectDelay, self.reconnectDelayMax)
-            NSLog("Will wait \(delay) seconds before reconnect")
+            log.verbose("Will wait \(delay) seconds before reconnect")
             
             self.delay(Double(delay)){
                 [unowned self] ()->Void in
@@ -508,7 +508,7 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
                 }
                 
                 self.reconnecting = true
-                NSLog("[SocketIOClient] attempting to reconnect")
+                log.verbose("[SocketIOClient] attempting to reconnect")
                 self.open()
             }
         }
@@ -522,7 +522,7 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
     
     // TODO Check whether we need to add the callback
     public func packet(packet: SocketIOPacket){
-        NSLog("[SocketIOClient][\(self.readyState.description)] Sending packet \(packet.description)")
+        log.verbose("[SocketIOClient][\(self.readyState.description)] Sending packet \(packet.description)")
         
         let (encoded, buffers) = packet.encode()
         
@@ -554,13 +554,13 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
             self.readyState = .Open
             
             if self.reconnecting {
-                NSLog("[SocketIOClient] Reconnection succeeded")
+                log.verbose("[SocketIOClient] Reconnection succeeded")
                 self.reconnecting = false
                 self.attempts = 0
                 self.delegate?.clientReconnected(self)
             }
             else {
-                NSLog("[SocketIOClient][\(self.readyState.description) Underlying engine socket connected")
+                log.verbose("[SocketIOClient][\(self.readyState.description) Underlying engine socket connected")
                 self.delegate?.clientOnOpen(self)
             }
             
@@ -572,7 +572,7 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
     }
     
     public func socketOnClose(socket: EngineSocket) {
-        NSLog("[SocketIOClient] Underlying socket closed")
+        log.verbose("[SocketIOClient] Underlying socket closed")
         
         self.readyState = .Closed
         self.delegate?.clientOnClose(self)
@@ -583,7 +583,7 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
     }
     
     public func socketOnData(socket: EngineSocket, data: [Byte], isBinary: Bool) {
-        NSLog("[SocketIOClient][\(self.readyState.description)] got packet from underlying socket")
+        log.verbose("[SocketIOClient][\(self.readyState.description)] got packet from underlying socket")
         
         var socketIOPacket: SocketIOPacket?
         
@@ -603,7 +603,7 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
                     socket.receivePacket(socketIOPacket!)
                 }
                 else{
-                    NSLog("[SocketIOClient][\(self.readyState.description)] Unknown namespace \(namespace)")
+                    log.verbose("[SocketIOClient][\(self.readyState.description)] Unknown namespace \(namespace)")
                 }
             }
         }
@@ -617,21 +617,21 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
         dispatch_async(self.dispatchQueue){
             [unowned self] () -> Void in
             if self.reconnecting {
-                NSLog("Reconnect failed with error: \(error) [\(description)]")
+                log.verbose("Reconnect failed with error: \(error) [\(description)]")
                 
                 self.delegate?.clientReconnectionError(self, error: error, description: description)
                 self.reconnecting = false
                 self.reconnect()
             }
             else{
-                NSLog("[SocketIOClient][\(self.readyState.description)] Underlying engine socket raised error \(error) [\(description)]")
+                log.verbose("[SocketIOClient][\(self.readyState.description)] Underlying engine socket raised error \(error) [\(description)]")
                 self.delegate?.clientOnError(self, error: error, description: description)
             }
         }
     }
     
     public func socketDidUpgraded(socket: EngineSocket) {
-        NSLog("Underlying socket upgraded")
+        log.verbose("Underlying socket upgraded")
     }
     
     // End of EngineSocketDelegate
@@ -692,7 +692,7 @@ public class SocketIOSocket: NSObject {
     }
     
     public func connect(){
-        NSLog("[SocketIOSocket][\(self.namespace)][\(self.connected)] connect to namespace")
+        log.verbose("[SocketIOSocket][\(self.namespace)][\(self.connected)] connect to namespace")
         self.packet(.Connect)
     }
     
@@ -710,7 +710,7 @@ public class SocketIOSocket: NSObject {
     // Called when an ACK packet received
     func onAck(packet: SocketIOPacket){
         if let ack = self.acks[packet.id!] {
-            NSLog("[SocketIOSocket][\(self.namespace)][\(self.connected)] on ack for \(packet.id) with data \(packet.data!)")
+            log.verbose("[SocketIOSocket][\(self.namespace)][\(self.connected)] on ack for \(packet.id) with data \(packet.data!)")
             ack(packet: packet)
             self.acks[packet.id!] = nil
         }
@@ -763,7 +763,7 @@ public class SocketIOSocket: NSObject {
                         }
                         
                         if let id = packet.id {
-                            NSLog("[SocketIOSocket] sending ACK back to server")
+                            log.verbose("[SocketIOSocket] sending ACK back to server")
                             var packetType: SocketIOPacketType = packet.type == .Event ? .Ack : .BinaryAck
                             let ackPacket = SocketIOPacket(type: packetType, data: data, nsp: self.namespace, id: id)
                             self.client.packet(ackPacket)
@@ -771,7 +771,7 @@ public class SocketIOSocket: NSObject {
                     }
                 }
                 else{
-                    NSLog("The data is not a array, not able to get the event name, ignore")
+                    log.verbose("The data is not a array, not able to get the event name, ignore")
                 }
             }
         case .Ack, .BinaryAck:

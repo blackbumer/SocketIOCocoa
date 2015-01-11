@@ -94,11 +94,13 @@ public class Logger: LoggerProtocol {
     }
     
     public func debug(message: String) {
-        NSLog("[D]\(self.logPrefix()) \(message)")
+        //NSLog("[D]\(self.logPrefix()) \(message)")
+        log.verbose(message)
     }
     
     public func info(message: String) {
-        NSLog("[I]\(self.logPrefix()) \(message)")
+        //NSLog("[I]\(self.logPrefix()) \(message)")
+        log.info(message)
     }
 }
 
@@ -116,7 +118,7 @@ public func containsBinary(data: AnyObject)->Bool{
                 }
             }
             else{
-                NSLog("Dict has a non string key")
+                log.error("Dict has a non string key")
             }
         }
     }

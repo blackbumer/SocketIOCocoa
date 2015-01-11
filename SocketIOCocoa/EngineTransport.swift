@@ -1,5 +1,5 @@
 import Foundation
-
+import Alamofire
 
 public enum TransportReadyState: Printable, DebugPrintable{
     case Init, Open, Opening, Closing, Closed, Pausing, Paused
