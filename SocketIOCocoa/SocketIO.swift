@@ -396,7 +396,7 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
     public var attempts: Int = 0
     public var engineSocket: EngineSocket?
     var decoder: SocketIOPacketDecoder
-    var skipReconnect = false
+    public var skipReconnect = false
     
     // Flag indicate whether we already did reconnect on open
     var openReconnectPerformed: Bool = true
@@ -515,6 +515,7 @@ public class SocketIOClient: NSObject, EngineSocketDelegate {
     }
     
     public func close(){
+        self.skipReconnect = true
         self.autoConnect = false
         self.readyState = .Closed
         self.engineSocket?.close()
